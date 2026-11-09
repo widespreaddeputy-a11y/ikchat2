@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>IKChat</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#6C5CE7">
+<style>
+:root {
+  --primary:#6C5CE7;
+  --primary-soft:#ede9ff;
+  --primary-dark:#5a4bd1;
+  --bg:#ffffff;
+  --surface:#f5f5f7;
+  --surface2:#efeff3;
+  --card:#ffffff;
+  --text:#111111;
+  --text2:#7a7a80;
+  --text3:#aeaeb2;
+  --divider:#ececec;
+  --border:#e7e7ea;
+  --incoming:#f2f2f7;
+  --outgoing:#6C5CE7;
+  --success:#30d158;
+  --error:#ff3b30;
+  --radius:14px;
+  --radius-lg:22px;
+}
+[data-theme="dark"]{
+  --bg:#0f0f10;
+  --surface:#1c1c1e;
+  --surface2:#2c2c2e;
+  --card:#1c1c1e;
+  --text:#f5f5f7;
+  --text2:#98989d;
+  --text3:#6c6c70;
+  --divider:#2c2c2e;
+  --border:#38383a;
+  --incoming:#2c2c2e;
+  --primary-soft:#2a2550;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);overscroll-behavior:none;-webkit-font-smoothing:antialiased;letter-spacing:-0.01em}
+button{font-family:inherit}
+input,textarea{font-family:inherit}
+.app{max-width:430px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;overflow:hidden;border-left:1px solid var(--border);border-right:1px solid var(--border)}
+@media(min-width:900px){.app{max-width:1000px;display:grid;grid-template-columns:340px 1fr}.single-col{max-width:430px!important;display:block!important;margin:0 auto}body{background:#f2f2f7}[data-theme="dark"] body{background:#000}}
+.screen{display:none;min-height:100vh;flex-direction:column}
+.screen.active{display:flex}
+
+/* splash */
+.splash{position:fixed;inset:0;z-index:999;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s}
+.splash.hide{opacity:0;pointer-events:none}
+.splash-logo{width:64px;height:64px;border-radius:18px;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:26px;letter-spacing:-1px}
+.splash h1{margin-top:14px;font-size:22px;font-weight:700;letter-spacing:-0.5px}
+.splash p{color:var(--text2);font-size:13px;margin-top:4px}
+.loader{margin-top:28px;width:22px;height:22px;border:2px solid #e5e5ea;border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* topbar */
+.topbar{height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:var(--bg);border-bottom:1px solid var(--divider);position:sticky;top:0;z-index:10}
+.topbar h1{font-size:17px;font-weight:600}
+.icon-btn{width:36px;height:36px;border-radius:9px;border:none;background:transparent;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--text);cursor:pointer}
+.icon-btn:active{background:var(--surface)}
+.icon-btn.filled{background:var(--primary);color:#fff}
+
+/* buttons */
+.btn{width:100%;padding:14px 18px;border-radius:12px;border:none;font-size:16px;font-weight:600;cursor:pointer;transition:opacity .15s}
+.btn:active{opacity:.88;transform:scale(.995)}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-secondary{background:var(--surface);color:var(--text)}
+.btn-ghost{background:none;border:none;color:var(--primary);font-weight:600;padding:10px 12px;cursor:pointer}
+.input-group{margin-bottom:14px}
+.input-label{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;display:block;text-transform:uppercase;letter-spacing:.04em}
+.input{width:100%;padding:13px 14px;border:1px solid var(--border);border-radius:11px;background:var(--card);color:var(--text);font-size:15px;outline:none}
+.input:focus{border-color:var(--primary)}
+.input::placeholder{color:var(--text3)}
+.hint{font-size:12px;color:var(--text2);margin-top:6px;line-height:1.3}
+.hint.error{color:var(--error)} .hint.ok{color:var(--success)}
+.divider{height:1px;background:var(--divider);margin:14px 0}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px}
+.badge{background:var(--primary);color:#fff;font-size:11px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px}
+
+/* welcome - minimal, not AI */
+.welcome{flex:1;display:flex;flex-direction:column;padding:0}
+.welcome-hero{padding:42px 24px 18px;text-align:left}
+.welcome-hero h2{font-size:28px;font-weight:800;line-height:1.1;letter-spacing:-0.8px}
+.welcome-hero h2 span{color:var(--primary)}
+.welcome-hero p{margin-top:10px;color:var(--text2);font-size:15px;line-height:1.45}
+.welcome-ill{margin:10px 24px;background:var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden;padding:18px}
+.welcome-ill-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.welcome-bubble{padding:10px 12px;border-radius:14px;font-size:13px;line-height:1.35}
+.welcome-bubble.out{background:var(--primary);color:#fff;border-bottom-right-radius:4px}
+.welcome-bubble.in{background:var(--card);border:1px solid var(--border);border-bottom-left-radius:4px}
+.welcome-actions{padding:20px 24px;margin-top:auto}
+.welcome-actions .sub{margin-top:10px;text-align:center;font-size:12px;color:var(--text3);line-height:1.4}
+.welcome-actions .sub a{color:var(--text2);text-decoration:underline;text-underline-offset:3px}
+
+/* auth */
+.auth-head{padding:20px 20px 8px}
+.auth-head h2{font-size:22px;font-weight:750;letter-spacing:-0.4px}
+.auth-head p{color:var(--text2);font-size:14px;margin-top:4px;line-height:1.4}
+.method{margin:0 16px;border:1px solid var(--border);border-radius:14px;padding:14px 14px;display:flex;gap:12px;align-items:center;cursor:pointer;background:var(--card);transition:border-color .15s,background .15s;text-align:left;width:calc(100% - 32px)}
+.method:active{background:var(--surface)}
+.method + .method{margin-top:10px}
+.method-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.method h3{font-size:15px;font-weight:600}
+.method p{font-size:12px;color:var(--text2);margin-top:2px;line-height:1.3}
+.country{padding:12px 14px;border:1px solid var(--border);border-radius:11px;background:var(--card);display:flex;align-items:center;gap:8px;cursor:pointer}
+.otp-row{display:flex;gap:8px;justify-content:center;margin:18px 0}
+.otp{width:46px;height:50px;text-align:center;font-size:20px;font-weight:700;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);outline:none}
+.otp:focus{border-color:var(--primary)}
+.otp.filled{border-color:var(--primary);background:var(--primary-soft)}
+.strength{height:3px;background:var(--divider);border-radius:2px;margin-top:8px;overflow:hidden}
+.strength i{display:block;height:100%;width:0%;transition:width .25s,background .25s;border-radius:2px}
+
+/* chat list */
+.chat-list{flex:1;overflow-y:auto}
+.chat-row{display:flex;gap:12px;padding:9px 14px;align-items:center;cursor:pointer}
+.chat-row:active{background:var(--surface)}
+.avatar{width:48px;height:48px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--text2);font-size:16px;flex-shrink:0;overflow:hidden;position:relative}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.dot{position:absolute;right:0;bottom:0;width:11px;height:11px;background:var(--success);border:2px solid var(--bg);border-radius:50%}
+.chat-main{flex:1;min-width:0}
+.chat-name{font-size:15px;font-weight:600;display:flex;gap:6px;align-items:center}
+.chat-last{font-size:13px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.chat-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.chat-time{font-size:11px;color:var(--text3)}
+.unread .chat-name{font-weight:700}
+
+/* empty states - human, not AI */
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;text-align:center}
+.empty-ill{width:180px;height:140px;display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+.empty h3{font-size:17px;font-weight:700}
+.empty p{font-size:13px;color:var(--text2);line-height:1.45;margin-top:6px;max-width:300px}
+.empty .btn{margin-top:18px;max-width:260px}
+
+/* messages */
+.messages{flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:6px;background:var(--bg)}
+.day{align-self:center;background:var(--surface);border:1px solid var(--border);padding:4px 10px;border-radius:12px;font-size:11px;color:var(--text2);margin:6px 0;font-weight:600}
+.bubble{max-width:74%;padding:8px 11px;border-radius:16px;font-size:15px;line-height:1.35;position:relative;word-wrap:break-word}
+.bubble.in{background:var(--incoming);align-self:flex-start;border-bottom-left-radius:4px}
+.bubble.out{background:var(--primary);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.bubble-time{font-size:11px;opacity:.65;margin-top:4px;text-align:right}
+.bubble.in .bubble-time{color:var(--text2);opacity:1}
+.bubble-img{margin:-8px -11px 6px;border-radius:10px;overflow:hidden}
+.bubble-img img{width:100%;display:block;max-width:240px}
+.voice{display:flex;gap:10px;align-items:center;min-width:180px}
+.voice-btn{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.bubble.in .voice-btn{background:var(--primary);color:#fff}
+.wave{flex:1;height:18px;display:flex;gap:2px;align-items:center}
+.wave i{width:3px;background:currentColor;border-radius:2px;opacity:.7}
+.input-bar{display:flex;gap:8px;align-items:flex-end;padding:8px 10px;background:var(--bg);border-top:1px solid var(--divider)}
+.input-bar textarea{flex:1;min-height:38px;max-height:110px;padding:9px 12px;border-radius:18px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:15px;outline:none;resize:none;line-height:1.4}
+.attach-grid{position:absolute;bottom:52px;left:10px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:8px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;box-shadow:0 10px 30px rgba(0,0,0,.12);z-index:20}
+.attach-cell{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border-radius:10px;cursor:pointer}
+.attach-cell:active{background:var(--surface)}
+.attach-ic{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px}
+
+/* bottom nav */
+.tabs{display:flex;border-top:1px solid var(--divider);background:var(--bg);padding:4px 0 calc(4px + env(safe-area-inset-bottom));position:sticky;bottom:0}
+.tab{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px;color:var(--text3);font-size:10px;font-weight:600;cursor:pointer}
+.tab.active{color:var(--primary)}
+.tab span{font-size:20px;position:relative}
+.tab b{position:absolute;top:-4px;right:-8px;background:var(--error);color:#fff;font-size:10px;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+
+/* sheets */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.28);display:none;align-items:flex-end;justify-content:center;z-index:50;padding:0}
+.overlay.show{display:flex}
+.sheet{background:var(--bg);border-radius:18px 18px 0 0;width:100%;max-width:430px;max-height:86vh;overflow:auto}
+.handle{width:34px;height:4px;background:var(--border);border-radius:2px;margin:10px auto}
+.list-item{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--divider);cursor:pointer;background:var(--bg)}
+.list-item:active{background:var(--surface)}
+.list-item:last-child{border-bottom:none}
+.ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;flex-shrink:0}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;background:#111;color:#fff;padding:10px 16px;border-radius:20px;font-size:13px;font-weight:500;z-index:99;display:none;max-width:90%;text-align:center}
+.toast.show{display:block}
+.search-wrap{padding:10px 12px;border-bottom:1px solid var(--divider);background:var(--bg)}
+.search{display:flex;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 10px}
+.search input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:14px}
+.filters{display:flex;gap:8px;padding:10px 12px;overflow:auto}
+.fchip{padding:7px 12px;border-radius:20px;border:1px solid var(--border);background:var(--card);font-size:13px;font-weight:600;white-space:nowrap;color:var(--text2);cursor:pointer}
+.fchip.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+.fab{position:absolute;right:16px;bottom:72px;width:52px;height:52px;border-radius:14px;background:var(--primary);color:#fff;border:none;box-shadow:0 8px 20px rgba(108,92,231,.35);display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer}
+.settings-sec{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin:18px 16px 8px}
+.settings-card{margin:0 12px;background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.settings-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--divider);cursor:pointer}
+.settings-row:last-child{border-bottom:none}
+.settings-row:active{background:var(--surface)}
+.call-screen{position:fixed;inset:0;background:#0b0b0c;z-index:80;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;color:#fff}
+.call-av{width:110px;height:110px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:42px;font-weight:800;box-shadow:0 0 0 14px rgba(108,92,231,.14)}
+</style>
+</head>
+<body>
+<div class="splash" id="splash">
+  <div class="splash-logo">ИК</div>
+  <h1>IKChat</h1>
+  <p>общайся свободно</p>
+  <div class="loader"></div>
+</div>
+
+<div class="app single-col" id="app">
+
+  <!-- WELCOME - human, minimal -->
+  <div class="screen active" id="screen-welcome">
+    <div class="welcome">
+      <div class="welcome-hero">
+        <h2>Мессенджер<br><span>без лишнего.</span></h2>
+        <p>Быстрые чаты, звонки и файлы. Никакой рекламы. Твои данные — только твои.</p>
+      </div>
+      <div class="welcome-ill">
+        <div class="welcome-ill-grid">
+          <div class="welcome-bubble in">привет! это IKChat?</div>
+          <div class="welcome-bubble out" style="grid-column:2">да! зацени, как быстро летает →</div>
+          <div class="welcome-bubble in" style="grid-column:1 / span 2;justify-self:start;max-width:92%">а ещё тут звонки, группы до 200к и секретные чаты 🔒</div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:6px;align-items:center;color:var(--text3);font-size:11px">
+          <span style="width:6px;height:6px;background:var(--success);border-radius:50%"></span> зашифровано • работает без симки
+        </div>
+      </div>
+      <div class="welcome-actions">
+        <button class="btn btn-primary" onclick="go('auth-method')">Начать</button>
+        <div class="sub">Продолжая, вы соглашаетесь с <a href="#">Правилами</a> и <a href="#">Политикой</a>. Код при регистрации — <b>123456</b> для теста.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUTH METHOD -->
+  <div class="screen" id="screen-auth-method">
+    <div class="topbar"><button class="icon-btn" onclick="go('welcome')">‹</button><h1>Регистрация</h1><span style="width:36px"></span></div>
+    <div class="auth-head"><h2>Как удобнее?</h2><p>Выбери способ — потом можно добавить остальные в настройках.</p></div>
+    <button class="method" onclick="go('phone')"><div class="method-icon" style="background:#eef0ff;color:#6C5CE7">◷</div><div><h3>По номеру телефона</h3><p>SMS-код, быстрое восстановление</p></div><span style="margin-left:auto;color:var(--text3)">›</span></button>
+    <button class="method" onclick="go('email')"><div class="method-icon" style="background:#e6fff7;color:#0a8a6a">＠</div><div><h3>По почте</h3><p>Письмо с кодом, без привязки к симке</p></div><span style="margin-left:auto;color:var(--text3)">›</span></button>
+    <button class="method" onclick="go('anon')"><div class="method-icon" style="background:#fff4e6;color:#b26a00">○</div><div><h3>Без номера и почты</h3><p>Только ник и пароль — анонимно</p></div><span style="margin-left:auto;color:var(--text3)">›</span></button>
+    <div class="divider" style="margin:16px"></div>
+    <div style="text-align:center;font-size:13px;color:var(--text2)">Уже есть аккаунт? <span style="color:var(--primary);font-weight:650;cursor:pointer" onclick="go('login')">Войти</span></div>
+  </div>
+
+  <!-- PHONE -->
+  <div class="screen" id="screen-phone">
+    <div class="topbar"><button class="icon-btn" onclick="go('auth-method')">‹</button><h1>Номер</h1><span style="width:36px"></span></div>
+    <div style="padding:18px 16px;flex:1">
+      <div style="font-size:17px;font-weight:700">Введите номер</div><div class="hint" style="margin-top:4px">Пришлём SMS с кодом</div>
+      <div style="margin-top:16px"><div class="input-label">Страна</div><div class="country" onclick="toggleCountry()"><span id="c-flag">🇷🇺</span><span id="c-name" style="font-weight:600">Россия</span><span id="c-code" style="color:var(--text2)">+7</span><span style="margin-left:auto;color:var(--text3)">▾</span></div>
+        <div id="country-list" style="display:none;margin-top:8px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--card)">
+          <div style="padding:12px 14px;display:flex;gap:8px;cursor:pointer" onclick="pickCountry('🇷🇺','Россия','+7')">🇷🇺 Россия <span style="margin-left:auto;color:var(--text2)">+7</span></div>
+          <div style="padding:12px 14px;display:flex;gap:8px;cursor:pointer;border-top:1px solid var(--divider)" onclick="pickCountry('🇰🇿','Казахстан','+7')">🇰🇿 Казахстан <span style="margin-left:auto;color:var(--text2)">+7</span></div>
+          <div style="padding:12px 14px;display:flex;gap:8px;cursor:pointer;border-top:1px solid var(--divider)" onclick="pickCountry('🇧🇾','Беларусь','+375')">🇧🇾 Беларусь <span style="margin-left:auto;color:var(--text2)">+375</span></div>
+          <div style="padding:12px 14px;display:flex;gap:8px;cursor:pointer;border-top:1px solid var(--divider)" onclick="pickCountry('🇺🇦','Украина','+380')">🇺🇦 Украина <span style="margin-left:auto;color:var(--text2)">+380</span></div>
+          <div style="padding:12px 14px;display:flex;gap:8px;cursor:pointer;border-top:1px solid var(--divider)" onclick="pickCountry('🇺🇿','Узбекистан','+998')">🇺🇿 Узбекистан <span style="margin-left:auto;color:var(--text2)">+998</span></div>
+        </div>
+      </div>
+      <div class="input-group" style="margin-top:14px"><div class="input-label">Телефон</div><div style="display:flex;gap:8px"><span id="phone-prefix" style="padding:12px 10px;border:1px solid var(--border);border-radius:11px;background:var(--surface);font-weight:600">+7</span><input class="input" id="phone-input" placeholder="(900) 123-45-67" oninput="formatPhone(this)" style="flex:1"></div><div class="hint">Маска ввода, определение оператора</div></div>
+      <button class="btn btn-primary" style="margin-top:14px" onclick="sendCode()">Получить код</button>
+    </div>
+  </div>
+
+  <!-- PHONE VERIFY -->
+  <div class="screen" id="screen-phone-verify">
+    <div class="topbar"><button class="icon-btn" onclick="go('phone')">‹</button><h1>Код</h1><span style="width:36px"></span></div>
+    <div style="padding:22px 16px;flex:1;text-align:center">
+      <div style="font-size:17px;font-weight:700">Введите код из SMS</div><div class="hint" id="verify-phone-display" style="margin-top:4px">отправили на +7 (900) •••-••-67</div>
+      <div class="otp-row" id="otp-row"><input class="otp" maxlength="1" inputmode="numeric" oninput="otpIn(this,0)" onkeydown="otpBack(event,0)"><input class="otp" maxlength="1" inputmode="numeric" oninput="otpIn(this,1)" onkeydown="otpBack(event,1)"><input class="otp" maxlength="1" inputmode="numeric" oninput="otpIn(this,2)" onkeydown="otpBack(event,2)"><input class="otp" maxlength="1" inputmode="numeric" oninput="otpIn(this,3)" onkeydown="otpBack(event,3)"><input class="otp" maxlength="1" inputmode="numeric" oninput="otpIn(this,4)" onkeydown="otpBack(event,4)"><input class="otp" maxlength="1" inputmode="numeric" oninput="otpIn(this,5)" onkeydown="otpBack(event,5)"></div>
+      <div class="hint" id="otp-timer">Повтор через 0:59</div><button class="btn-ghost" id="resend-btn" style="display:none" onclick="resend()">Отправить ещё раз</button>
+      <div style="margin-top:14px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--text2)">Для демо введи <b style="color:var(--text)">123456</b></div>
+      <button class="btn btn-primary" style="margin-top:16px" onclick="verifyCode()">Продолжить</button>
+    </div>
+  </div>
+
+  <!-- EMAIL -->
+  <div class="screen" id="screen-email">
+    <div class="topbar"><button class="icon-btn" onclick="go('auth-method')">‹</button><h1>Почта</h1><span style="width:36px"></span></div>
+    <div style="padding:18px 16px;flex:1;overflow:auto">
+      <div style="font-size:17px;font-weight:700">Создай аккаунт</div><div class="hint" style="margin-top:4px">Почта нужна только для входа</div>
+      <div class="input-group" style="margin-top:16px"><div class="input-label">Email</div><input class="input" id="email-input" type="email" placeholder="you@example.com" oninput="validateEmail(this)"><div class="hint" id="email-hint"></div></div>
+      <div class="input-group"><div class="input-label">Пароль</div><div style="position:relative"><input class="input" id="email-pass" type="password" placeholder="от 8 символов" oninput="checkStrength(this.value)"><button onclick="togglePass('email-pass',this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:13px;color:var(--text2);cursor:pointer">показать</button></div><div class="strength"><i id="pass-bar"></i></div><div class="hint" id="pass-hint">Буквы + цифры</div></div>
+      <div class="input-group"><div class="input-label">Повтори пароль</div><input class="input" id="email-pass2" type="password" placeholder="ещё раз" oninput="checkMatch()"><div class="hint" id="pass2-hint"></div></div>
+      <button class="btn btn-primary" style="margin-top:12px" onclick="registerEmail()">Зарегистрироваться</button>
+    </div>
+  </div>
+  <div class="screen" id="screen-email-verify"><div class="topbar"><button class="icon-btn" onclick="go('email')">‹</button><h1>Почта</h1><span style="width:36px"></span></div><div style="padding:28px 16px;flex:1;text-align:center"><div style="width:56px;height:56px;background:var(--primary);border-radius:14px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;margin:0 auto">✉</div><div style="font-size:17px;font-weight:700;margin-top:14px">Письмо отправили</div><div class="hint" id="verify-email-display" style="margin-top:6px">проверь почту и перейди по ссылке</div><button class="btn btn-primary" style="margin-top:16px" onclick="go('profile-setup')">Открыть почту</button><button class="btn-ghost" onclick="toast('Отправили ещё раз')">Отправить повторно</button></div></div>
+
+  <!-- ANON -->
+  <div class="screen" id="screen-anon">
+    <div class="topbar"><button class="icon-btn" onclick="go('auth-method')">‹</button><h1>Анонимно</h1><span style="width:36px"></span></div>
+    <div style="padding:18px 16px;flex:1;overflow:auto">
+      <div style="background:#fff7e6;border:1px solid #ffe2a8;border-radius:12px;padding:10px 12px;display:flex;gap:8px"><span>⚠</span><div style="font-size:12px;line-height:1.35;color:#7a5200">Без почты и номера восстановить пароль не получится. Запиши его.</div></div>
+      <div class="input-group" style="margin-top:14px"><div class="input-label">Логин</div><input class="input" id="anon-login" placeholder="например, sokol_92" oninput="checkUsername(this.value)"><div class="hint" id="anon-login-hint">a-z, 0-9, _, 5–32 символа</div></div>
+      <div class="input-group"><div class="input-label">Пароль</div><input class="input" id="anon-pass" type="password" placeholder="придумай пароль" oninput="checkStrength(this.value,'anon-bar','anon-hint')"><div class="strength"><i id="anon-bar"></i></div><div class="hint" id="anon-hint"></div></div>
+      <div class="input-group"><div class="input-label">Повтори</div><input class="input" id="anon-pass2" type="password" placeholder="ещё раз"></div>
+      <label style="display:flex;gap:8px;align-items:flex-start;margin:10px 0"><input type="checkbox" id="anon-check"><span style="font-size:12px;color:var(--text2);line-height:1.35">Понимаю, что без привязки аккаунт не восстановить</span></label>
+      <button class="btn btn-primary" onclick="registerAnon()">Создать</button>
+    </div>
+  </div>
+
+  <!-- LOGIN -->
+  <div class="screen" id="screen-login">
+    <div class="topbar"><button class="icon-btn" onclick="go('auth-method')">‹</button><h1>Вход</h1><span style="width:36px"></span></div>
+    <div style="padding:18px 16px;flex:1">
+      <div style="font-size:17px;font-weight:700">С возвращением</div><div class="hint" style="margin-top:4px">Войди по телефону, почте или @нику</div>
+      <div class="input-group" style="margin-top:16px"><div class="input-label">Логин</div><input class="input" id="login-id" placeholder="+7 • email • @username" oninput="detectLogin(this.value)"><div class="hint" id="login-hint"></div></div>
+      <div class="input-group"><div class="input-label">Пароль</div><input class="input" id="login-pass" type="password" placeholder="••••••••"></div>
+      <button class="btn btn-primary" style="margin-top:8px" onclick="doLogin()">Войти</button>
+      <div style="text-align:center;margin-top:10px"><span style="font-size:13px;color:var(--primary);font-weight:600;cursor:pointer" onclick="toast('Инструкции отправили на почту')">Забыл пароль?</span></div>
+      <div style="display:flex;gap:10px;margin-top:16px"><button class="btn btn-secondary" style="flex:1" onclick="toast('Вход по Face ID')">Face ID</button><button class="btn btn-secondary" style="flex:1" onclick="toast('Google')">Google</button></div>
+    </div>
+  </div>
+
+  <!-- PROFILE SETUP -->
+  <div class="screen" id="screen-profile-setup">
+    <div class="topbar"><button class="icon-btn" onclick="go('auth-method')">‹</button><h1>Профиль</h1><span style="width:36px"></span></div>
+    <div style="padding:18px 16px;flex:1;overflow:auto">
+      <div style="display:flex;gap:14px;align-items:center">
+        <div style="position:relative"><div class="avatar" id="setup-avatar" style="width:64px;height:64px;font-size:20px;background:var(--primary);color:#fff">ИК</div><button onclick="randomAvatar()" style="position:absolute;right:-4px;bottom:-4px;width:22px;height:22px;border-radius:50%;background:var(--text);color:var(--bg);border:2px solid var(--bg);font-size:10px">+</button></div>
+        <div><div style="font-weight:700">Фото</div><div class="hint" style="margin-top:2px">можно позже • нажми +</div><div style="display:flex;gap:6px;margin-top:6px"><span onclick="toast('Галерея')" style="font-size:12px;padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:20px;cursor:pointer">Галерея</span><span onclick="randomAvatar()" style="font-size:12px;padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:20px;cursor:pointer">Цвет</span></div></div>
+      </div>
+      <div class="input-group" style="margin-top:16px"><div class="input-label">Имя *</div><input class="input" id="setup-name" placeholder="Как к тебе обращаться?" oninput="updateUsername()"></div>
+      <div class="input-group"><div class="input-label">Фамилия</div><input class="input" id="setup-lastname" placeholder="Необязательно"></div>
+      <div class="input-group"><div class="input-label">Юзернейм</div><div style="position:relative"><span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-weight:600">@</span><input class="input" id="setup-username" placeholder="ivan_petrov" style="padding-left:26px" oninput="checkUsername(this.value,'setup-hint')"></div><div class="hint" id="setup-hint"></div></div>
+      <div class="input-group"><div class="input-label">О себе</div><textarea class="input" id="setup-bio" placeholder="Пара слов о себе" rows="2" maxlength="200" style="resize:none"></textarea></div>
+      <div style="display:flex;gap:10px;margin-top:16px"><button class="btn btn-secondary" style="flex:1" onclick="goHome()">Пропустить</button><button class="btn btn-primary" style="flex:1" onclick="goHome()">Готово</button></div>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div class="screen" id="screen-home">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:8px"><button class="icon-btn" onclick="showSheet('menu-sheet')">☰</button><div style="font-weight:800;letter-spacing:-.4px">IKChat</div><span style="font-size:11px;color:var(--text3);font-weight:600;margin-left:2px">beta</span></div>
+      <div style="display:flex;gap:6px"><button class="icon-btn" onclick="toggleSearch()">⌕</button><button class="icon-btn filled" onclick="showSheet('new-chat-sheet')">✎</button></div>
+    </div>
+    <div id="home-search" style="display:none">
+      <div class="search-wrap"><div class="search"><span style="color:var(--text3)">⌕</span><input id="search-input" placeholder="Поиск по чатам" oninput="filterChats(this.value)"><button onclick="toggleSearch()" style="background:none;border:none;color:var(--text3);font-size:16px">×</button></div></div>
+      <div class="filters"><button class="fchip active" onclick="setFilter(this,'all')">Все</button><button class="fchip" onclick="toast('Скоро')">Личные</button><button class="fchip" onclick="toast('Скоро')">Группы</button><button class="fchip" onclick="toast('Скоро')">Каналы</button></div>
+    </div>
+    <div class="chat-list" id="chat-list"></div>
+    <button class="fab" onclick="showSheet('new-chat-sheet')">✎</button>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('chats',this)"><span>◫</span>Чаты</button>
+      <button class="tab" onclick="go('calls')"><span>◷</span>Звонки</button>
+      <button class="tab" onclick="go('contacts')"><span>○○</span>Контакты</button>
+      <button class="tab" onclick="go('settings')"><span>⚙</span>Настройки</button>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div class="screen" id="screen-chat" style="max-height:100vh">
+    <div class="topbar"><button class="icon-btn" onclick="go('home')">‹</button><div class="avatar" id="chat-avatar" style="width:32px;height:32px;font-size:13px">ИК</div><img id="chat-avatar-img" style="width:32px;height:32px;border-radius:50%;object-fit:cover;display:none"><div style="flex:1;min-width:0;margin-left:8px;cursor:pointer" onclick="toast('Профиль')"><div id="chat-name" style="font-weight:650;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Выбери чат</div><div id="chat-status" style="font-size:11px;color:var(--success)">в сети</div></div><button class="icon-btn" onclick="startCall('voice')">☎</button><button class="icon-btn" onclick="startCall('video')">◎</button><button class="icon-btn" onclick="showSheet('chat-menu')">⋮</button></div>
+    <div class="messages" id="messages-area"></div>
+    <div id="reply-preview" style="display:none;padding:8px 12px;background:var(--surface);border-top:1px solid var(--divider);border-left:3px solid var(--primary)"><div style="display:flex;justify-content:space-between"><div><div id="reply-name" style="font-size:11px;font-weight:700;color:var(--primary)">Ответ</div><div id="reply-text" style="font-size:12px;color:var(--text2)">Текст</div></div><button onclick="cancelReply()" style="background:none;border:none;font-size:16px;color:var(--text2)">×</button></div></div>
+    <div class="input-bar" style="position:relative">
+      <button class="icon-btn" onclick="toggleAttach()" style="flex-shrink:0">＋</button>
+      <textarea id="msg-input" placeholder="Сообщение" rows="1" oninput="onTyping(this)" onkeydown="msgKey(event)"></textarea>
+      <button class="icon-btn" onclick="toggleEmoji()" style="flex-shrink:0">☺</button>
+      <button class="icon-btn filled" id="send-btn" onclick="sendMessage()" style="flex-shrink:0;display:none">↑</button>
+      <button class="icon-btn" id="voice-btn" style="flex-shrink:0;background:var(--surface);border:1px solid var(--border)" onmousedown="startVoice()" onmouseup="stopVoice()" ontouchstart="startVoice()" ontouchend="stopVoice()">●</button>
+      <div id="attach-menu" class="attach-grid" style="display:none">
+        <div class="attach-cell" onclick="doAttach('gallery')"><div class="attach-ic" style="background:#6C5CE7">▣</div><span style="font-size:11px">Галерея</span></div>
+        <div class="attach-cell" onclick="doAttach('camera')"><div class="attach-ic" style="background:#0a8a6a">◎</div><span style="font-size:11px">Камера</span></div>
+        <div class="attach-cell" onclick="doAttach('file')"><div class="attach-ic" style="background:#2563eb">≡</div><span style="font-size:11px">Файл</span></div>
+        <div class="attach-cell" onclick="doAttach('location')"><div class="attach-ic" style="background:#ea580c">⌖</div><span style="font-size:11px">Гео</span></div>
+        <div class="attach-cell" onclick="doAttach('contact')"><div class="attach-ic" style="background:#a16207">○</div><span style="font-size:11px">Контакт</span></div>
+        <div class="attach-cell" onclick="doAttach('poll')"><div class="attach-ic" style="background:#9333ea">▭</div><span style="font-size:11px">Опрос</span></div>
+      </div>
+      <div id="emoji-picker" style="display:none;position:absolute;bottom:48px;right:8px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:10px;box-shadow:0 10px 30px rgba(0,0,0,.12);width:260px">
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;font-size:18px;text-align:center">
+          <span onclick="insertEmoji('😊')" style="cursor:pointer">😊</span><span onclick="insertEmoji('😂')" style="cursor:pointer">😂</span><span onclick="insertEmoji('❤️')" style="cursor:pointer">❤️</span><span onclick="insertEmoji('🔥')" style="cursor:pointer">🔥</span><span onclick="insertEmoji('👍')" style="cursor:pointer">👍</span><span onclick="insertEmoji('👌')" style="cursor:pointer">👌</span><span onclick="insertEmoji('🎉')" style="cursor:pointer">🎉</span>
+          <span onclick="insertEmoji('😮')" style="cursor:pointer">😮</span><span onclick="insertEmoji('😢')" style="cursor:pointer">😢</span><span onclick="insertEmoji('🙏')" style="cursor:pointer">🙏</span><span onclick="insertEmoji('😍')" style="cursor:pointer">😍</span><span onclick="insertEmoji('🤔')" style="cursor:pointer">🤔</span><span onclick="insertEmoji('👏')" style="cursor:pointer">👏</span><span onclick="insertEmoji('🤝')" style="cursor:pointer">🤝</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CALLS -->
+  <div class="screen" id="screen-calls">
+    <div class="topbar"><button class="icon-btn" onclick="go('home')">‹</button><h1>Звонки</h1><button class="icon-btn" onclick="showSheet('new-call-sheet')">☎</button></div>
+    <div style="flex:1;overflow:auto" id="calls-list"></div>
+    <div class="tabs"><button class="tab" onclick="go('home')"><span>◫</span>Чаты</button><button class="tab active"><span>◷</span>Звонки</button><button class="tab" onclick="go('contacts')"><span>○○</span>Контакты</button><button class="tab" onclick="go('settings')"><span>⚙</span>Настройки</button></div>
+  </div>
+
+  <!-- CONTACTS -->
+  <div class="screen" id="screen-contacts">
+    <div class="topbar"><button class="icon-btn" onclick="go('home')">‹</button><h1>Контакты</h1><button class="icon-btn filled" onclick="showSheet('add-contact-sheet')">＋</button></div>
+    <div class="search-wrap"><div class="search"><span style="color:var(--text3)">⌕</span><input placeholder="Поиск" oninput="filterContacts(this.value)"></div></div>
+    <div style="flex:1;overflow:auto" id="contacts-list"></div>
+    <div class="tabs"><button class="tab" onclick="go('home')"><span>◫</span>Чаты</button><button class="tab" onclick="go('calls')"><span>◷</span>Звонки</button><button class="tab active"><span>○○</span>Контакты</button><button class="tab" onclick="go('settings')"><span>⚙</span>Настройки</button></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="screen" id="screen-settings">
+    <div class="topbar"><button class="icon-btn" onclick="go('home')">‹</button><h1>Настройки</h1><span style="width:36px"></span></div>
+    <div style="flex:1;overflow:auto;padding-bottom:12px">
+      <div style="margin:12px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;gap:12px;align-items:center">
+        <div class="avatar" id="settings-av" style="width:52px;height:52px;background:var(--primary);color:#fff">ИК</div>
+        <div style="flex:1"><div id="settings-name" style="font-weight:700">Твой профиль</div><div style="font-size:12px;color:var(--text2)" id="settings-sub">@username • нажми чтобы изменить</div></div><span style="color:var(--text3)">›</span>
+      </div>
+      <div class="settings-sec">Аккаунт</div><div class="settings-card"><div class="settings-row" onclick="toast('Скоро: смена номера')"><div class="ic" style="background:#6C5CE7">◈</div><div style="flex:1"><div style="font-weight:600;font-size:14px">Аккаунт</div><div style="font-size:12px;color:var(--text2)">Номер, почта, пароль, 2FA</div></div><span style="color:var(--text3)">›</span></div><div class="settings-row" onclick="toast('Конфиденциальность')"><div class="ic" style="background:#0a8a6a">◐</div><div style="flex:1"><div style="font-weight:600;font-size:14px">Конфиденциальность</div><div style="font-size:12px;color:var(--text2)">Кто видит номер, фото, онлайн</div></div><span style="color:var(--text3)">›</span></div></div>
+      <div class="settings-sec">Интерфейс</div><div class="settings-card"><div class="settings-row" onclick="showSheet('appearance-sheet')"><div class="ic" style="background:#9333ea">⬢</div><div style="flex:1"><div style="font-weight:600;font-size:14px">Внешний вид</div><div style="font-size:12px;color:var(--text2)">Тема, акцент, фон</div></div><span style="color:var(--text3)">›</span></div><div class="settings-row" onclick="toast('Чаты')"><div class="ic" style="background:#2563eb">⬣</div><div style="flex:1"><div style="font-weight:600;font-size:14px">Чаты</div><div style="font-size:12px;color:var(--text2)">Размер текста, пузырьки</div></div><span style="color:var(--text3)">›</span></div></div>
+      <div class="settings-sec">Данные</div><div class="settings-card"><div class="settings-row" onclick="toast('Хранилище')"><div class="ic" style="background:#6b7280">▤</div><div style="flex:1"><div style="font-weight:600;font-size:14px">Данные и память</div><div style="font-size:12px;color:var(--text2)" id="storage-hint">Пусто • кэш 0 МБ</div></div><span style="color:var(--text3)">›</span></div></div>
+      <div class="settings-sec">Поддержка</div><div class="settings-card"><div class="settings-row" onclick="showSheet('about-sheet')"><div class="ic" style="background:var(--text)">i</div><div style="flex:1"><div style="font-weight:600;font-size:14px">О приложении</div><div style="font-size:12px;color:var(--text2)">Версия 1.0 • IKChat</div></div><span style="color:var(--text3)">›</span></div></div>
+      <div style="padding:16px"><button class="btn btn-secondary" style="color:var(--error)" onclick="toast('Вышел')">Выйти</button><div style="text-align:center;font-size:11px;color:var(--text3);margin-top:10px">IKChat beta • общайся свободно</div></div>
+    </div>
+    <div class="tabs"><button class="tab" onclick="go('home')"><span>◫</span>Чаты</button><button class="tab" onclick="go('calls')"><span>◷</span>Звонки</button><button class="tab" onclick="go('contacts')"><span>○○</span>Контакты</button><button class="tab active"><span>⚙</span>Настройки</button></div>
+  </div>
+</div>
+
+<!-- OVERLAYS -->
+<div class="overlay" id="overlay" onclick="hideOverlays()">
+  <div class="sheet" id="new-chat-sheet" onclick="event.stopPropagation()"><div class="handle"></div><div style="padding:6px 0 12px"><div style="padding:0 16px 10px;font-weight:700;font-size:16px">Начать</div><div class="list-item" onclick="hideOverlays();showSheet('pick-contact-sheet')"><div class="ic" style="background:var(--primary)">✎</div><div><div style="font-weight:600">Новый чат</div><div style="font-size:12px;color:var(--text2)">Выбрать человека</div></div></div><div class="list-item" onclick="hideOverlays();showSheet('create-group-sheet')"><div class="ic" style="background:#0a8a6a">◫</div><div><div style="font-weight:600">Группа</div><div style="font-size:12px;color:var(--text2)">До 200 000 участников</div></div></div><div class="list-item" onclick="hideOverlays();showSheet('create-channel-sheet')"><div class="ic" style="background:#ea580c">◎</div><div><div style="font-weight:600">Канал</div><div style="font-size:12px;color:var(--text2)">Для подписчиков</div></div></div><div class="list-item" onclick="hideOverlays();toast('Секретный чат: включится E2E')"><div class="ic" style="background:#111">◐</div><div><div style="font-weight:600">Секретный чат</div><div style="font-size:12px;color:var(--text2)">Сквозное шифрование</div></div></div></div></div>
+
+  <div class="sheet" id="pick-contact-sheet" onclick="event.stopPropagation()" style="display:none"><div class="handle"></div><div style="padding:0 16px 8px;font-weight:700">Кому написать?</div><div style="padding:0 12px 8px"><div class="search"><span>⌕</span><input id="pick-search" placeholder="Имя или @ник" oninput="filterPick(this.value)"></div></div><div id="pick-list" style="max-height:50vh;overflow:auto"></div><div style="padding:10px 12px"><button class="btn btn-secondary" onclick="showSheet('add-contact-sheet')">＋ Добавить контакт</button></div></div>
+
+  <div class="sheet" id="add-contact-sheet" onclick="event.stopPropagation()" style="display:none"><div class="handle"></div><div style="padding:0 16px 12px;font-weight:700">Новый контакт</div><div style="padding:0 16px;display:flex;flex-direction:column;gap:10px"><input class="input" id="new-contact-name" placeholder="Имя"><input class="input" id="new-contact-username" placeholder="@юзернейм (a-z, 0-9, _)"><div style="display:flex;gap:10px"><button class="btn btn-secondary" style="flex:1" onclick="hideOverlays()">Отмена</button><button class="btn btn-primary" style="flex:1" onclick="addContact()">Добавить</button></div></div></div>
+
+  <div class="sheet" id="create-group-sheet" onclick="event.stopPropagation()" style="display:none"><div class="handle"></div><div style="padding:0 16px 14px"><div style="font-weight:700">Новая группа</div><div style="display:flex;justify-content:center;margin-top:12px"><div style="width:72px;height:72px;border-radius:50%;background:var(--surface);border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;color:var(--text3)">＋ фото</div></div><input class="input" placeholder="Название группы" id="group-name" style="margin-top:12px"><textarea class="input" placeholder="Описание (необязательно)" rows="2" style="margin-top:8px;resize:none"></textarea><div class="hint">Выбери участников на следующем шаге</div><button class="btn btn-primary" style="margin-top:10px" onclick="createGroup()">Создать</button></div></div>
+
+  <div class="sheet" id="create-channel-sheet" onclick="event.stopPropagation()" style="display:none"><div class="handle"></div><div style="padding:0 16px 14px"><div style="font-weight:700">Новый канал</div><div class="hint" style="margin-top:4px">Канал — для постов, без лимита подписчиков</div><input class="input" placeholder="Название канала" id="channel-name" style="margin-top:12px"><textarea class="input" placeholder="О чём канал?" rows="2" style="margin-top:8px;resize:none"></textarea><div style="display:flex;gap:8px;margin-top:10px"><label style="flex:1;display:flex;gap:6px;align-items:center;padding:10px;border:1px solid var(--border);border-radius:10px;font-size:13px"><input type="radio" name="ctype" checked> Публичный</label><label style="flex:1;display:flex;gap:6px;align-items:center;padding:10px;border:1px solid var(--border);border-radius:10px;font-size:13px"><input type="radio" name="ctype"> Приватный</label></div><button class="btn btn-primary" style="margin-top:10px" onclick="createChannel()">Создать</button></div></div>
+
+  <div class="sheet" id="appearance-sheet" onclick="event.stopPropagation()" style="display:none"><div class="handle"></div><div style="padding:0 16px 14px"><div style="font-weight:700">Внешний вид</div><div class="hint" style="margin-top:4px">Тема</div><div style="display:flex;gap:8px;margin-top:8px"><button class="btn btn-secondary" style="flex:1" onclick="setTheme('light')">Светлая</button><button class="btn btn-secondary" style="flex:1" onclick="setTheme('dark')">Тёмная</button></div><div class="hint" style="margin-top:12px">Акцент</div><div style="display:flex;gap:8px;margin-top:8px"><span onclick="setAccent('#6C5CE7')" style="width:32px;height:32px;border-radius:50%;background:#6C5CE7;cursor:pointer;border:2px solid var(--border)"></span><span onclick="setAccent('#0a8a6a')" style="width:32px;height:32px;border-radius:50%;background:#0a8a6a;cursor:pointer"></span><span onclick="setAccent('#2563eb')" style="width:32px;height:32px;border-radius:50%;background:#2563eb;cursor:pointer"></span><span onclick="setAccent('#ea580c')" style="width:32px;height:32px;border-radius:50%;background:#ea580c;cursor:pointer"></span><span onclick="setAccent('#db2777')" style="width:32px;height:32px;border-radius:50%;background:#db2777;cursor:pointer"></span></div></div></div>
+
+  <div class="sheet" id="chat-menu" onclick="event.stopPropagation()" style="display:none"><div class="handle"></div><div style="padding:6px 0"><div class="list-item" onclick="toast('Поиск в чате')"><div class="ic" style="background:var(--primary)">⌕</div>Поиск</div><div class="list-item" onclick="clearChat()"><div class="ic" style="background:var(--error)">×</div>Очистить чат</div><div class="list-item" onclick="deleteChat()"><div class="ic" style="background:var(--error)">–</div>Удалить чат</div></div></div>
+
+  <div class="sheet" id="msg-actions" onclick="event.stopPropagation()" style="display:none"><div class="handle"></div><div style="padding:8px 6px;display:flex;gap:8px;overflow:auto"><button onclick="react('❤️')" style="font-size:20px;background:var(--surface);border:1px solid var(--border);border-radius:10px;width:44px;height:44px">❤️</button><button onclick="react('👍')" style="font-size:20px;background:var(--surface);border:1px solid var(--border);border-radius:10px;width:44px;height:44px">👍</button><button onclick="react('😂')" style="font-size:20px;background:var(--surface);border:1px solid var(--border);border-radius:10px;width:44px;height:44px">😂</button><button onclick="react('🔥')" style="font-size:20px;background:var(--surface);border:1px solid var(--border);border-radius:10px;width:44px;height:44px">🔥</button></div><div style="padding:6px 0"><div class="list-item" onclick="doReply()"><div class="ic" style="background:var(--primary)">↩</div>Ответить</div><div class="list-item" onclick="copyMsg()"><div class="ic" style="background:#6b7280">≡</div>Копировать</div><div class="list-item" onclick="editMsg()"><div class="ic" style="background:#2563eb">✎</div>Изменить</div><div class="list-item" onclick="deleteMsg()"><div class="ic" style="background:var(--error)">×</div>Удалить</div></div></div>
+
+  <div class="sheet" id="about-sheet" onclick="event.stopPropagation()" style="display:none"><div class="handle"></div><div style="padding:0 16px 16px;text-align:center"><div class="splash-logo" style="margin:0 auto">ИК</div><div style="font-weight:800;margin-top:10px">IKChat</div><div style="font-size:12px;color:var(--text2)">1.0.0 • beta • зашифровано</div><div style="margin-top:12px;font-size:12px;color:var(--text2);line-height:1.5">Мессенджер без рекламы. Исходный код — скоро на GitHub. Сделано в России.</div><div style="display:flex;gap:8px;justify-content:center;margin-top:10px"><span style="padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:12px">ikchat.me</span><span style="padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:12px">@ikchat</span></div></div></div>
+
+  <div class="sheet" id="menu-sheet" onclick="event.stopPropagation()" style="display:none"><div class="handle"></div><div style="padding:0 12px 12px"><div style="display:flex;gap:12px;align-items:center;padding:10px;background:var(--primary);color:#fff;border-radius:12px"><div class="avatar" id="menu-av" style="background:#fff;color:var(--primary);width:42px;height:42px">ИК</div><div><div style="font-weight:700" id="menu-name">Твой профиль</div><div style="font-size:12px;opacity:.9" id="menu-sub">@username • в сети</div></div></div><div style="margin-top:10px"><div class="list-item" style="border-radius:10px;border:1px solid var(--border);margin-bottom:8px" onclick="hideOverlays();go('settings')"><div class="ic" style="background:var(--primary)">◈</div>Мой профиль</div><div class="list-item" style="border-radius:10px;border:1px solid var(--border);margin-bottom:8px" onclick="hideOverlays();showSheet('new-chat-sheet')"><div class="ic" style="background:#0a8a6a">＋</div>Создать группу</div><div class="list-item" style="border-radius:10px;border:1px solid var(--border)" onclick="hideOverlays();toast('Избранное — скоро')"><div class="ic" style="background:#2563eb">☆</div>Избранное</div></div></div></div>
+
+  <div class="sheet" id="new-call-sheet" onclick="event.stopPropagation()" style="display:none"><div class="handle"></div><div style="padding:0 16px 12px;font-weight:700">Кому позвонить?</div><div id="call-pick-list" style="max-height:50vh;overflow:auto"></div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// state - EMPTY by default
+let myName = localStorage.getItem('ikchat_name') || '';
+let myUsername = localStorage.getItem('ikchat_username') || '';
+let chats = JSON.parse(localStorage.getItem('ikchat_chats') || '[]');
+let contacts = JSON.parse(localStorage.getItem('ikchat_contacts') || '[]');
+let messagesData = JSON.parse(localStorage.getItem('ikchat_messages') || '{}');
+let calls = JSON.parse(localStorage.getItem('ikchat_calls') || '[]');
+let currentChatId = null;
+let replyingTo = null;
+let selectedMsgId = null;
+let msgCounter = parseInt(localStorage.getItem('ikchat_msgCounter') || '100');
+
+function save(){ localStorage.setItem('ikchat_chats', JSON.stringify(chats)); localStorage.setItem('ikchat_contacts', JSON.stringify(contacts)); localStorage.setItem('ikchat_messages', JSON.stringify(messagesData)); localStorage.setItem('ikchat_calls', JSON.stringify(calls)); localStorage.setItem('ikchat_msgCounter', String(msgCounter)); if(myName) localStorage.setItem('ikchat_name', myName); if(myUsername) localStorage.setItem('ikchat_username', myUsername); }
+
+setTimeout(()=>document.getElementById('splash').classList.add('hide'), 900);
+
+// apply saved profile if exists
+if(myName){ document.getElementById('settings-name').textContent = myName; document.getElementById('settings-sub').textContent = '@' + (myUsername||'username') + ' • в сети'; const av=document.getElementById('settings-av'); if(av) av.textContent = myName.split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase(); }
+
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById('screen-'+id);
+  if(el) el.classList.add('active');
+  const app=document.getElementById('app');
+  if(['home','chat','calls','contacts','settings'].includes(id)){
+    if(window.innerWidth>=900 && id==='home') app.classList.remove('single-col'); else app.classList.add('single-col');
+  } else app.classList.add('single-col');
+  if(id==='home') renderChats();
+  if(id==='chat') renderMessages();
+  if(id==='calls') renderCalls();
+  if(id==='contacts') renderContacts();
+  window.scrollTo(0,0);
+}
+
+// render empty or filled
+function renderChats(filter=''){
+  const list=document.getElementById('chat-list');
+  const filtered = chats.filter(c=> !filter || c.name.toLowerCase().includes(filter.toLowerCase()) || (c.username&&c.username.includes(filter.toLowerCase())));
+  if(filtered.length===0){
+    if(!filter && chats.length===0){
+      list.innerHTML = `
+        <div class="empty">
+          <div class="empty-ill">
+            <svg width="160" height="120" viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="10" y="18" width="108" height="68" rx="14" fill="#f5f5f7" stroke="#e7e7ea"/>
+              <rect x="18" y="30" width="54" height="8" rx="4" fill="#6C5CE7" opacity="0.9"/>
+              <rect x="18" y="42" width="82" height="6" rx="3" fill="#e7e7ea"/>
+              <rect x="18" y="52" width="64" height="6" rx="3" fill="#e7e7ea"/>
+              <rect x="32" y="70" width="96" height="28" rx="14" fill="#6C5CE7"/>
+              <rect x="40" y="78" width="62" height="6" rx="3" fill="white" opacity="0.95"/>
+              <circle cx="128" cy="92" r="22" fill="white" stroke="#e7e7ea"/>
+              <text x="128" y="98" text-anchor="middle" font-size="18">✎</text>
+            </svg>
+          </div>
+          <h3>Пока пусто</h3>
+          <p>У тебя ещё нет чатов. Начни с нового диалога — добавь контакт или создай группу.</p>
+          <button class="btn btn-primary" onclick="showSheet('new-chat-sheet')">Новый чат</button>
+          <button class="btn btn-secondary" style="margin-top:8px;max-width:260px" onclick="showSheet('add-contact-sheet')">Добавить контакт</button>
+          <div style="margin-top:14px;font-size:11px;color:var(--text3)">Подсказка: после регистрации чаты появятся здесь. Всё хранится локально.</div>
+        </div>`;
+    } else if(filter){
+      list.innerHTML = `<div class="empty" style="padding:40px 20px"><h3>Ничего не нашли</h3><p>Попробуй другой запрос</p></div>`;
+    } else {
+      list.innerHTML = `<div style="padding:12px">${filtered.map(chatRowHtml).join('')}</div>`;
+    }
+    const d=document.getElementById('desktop-chat-list'); if(d) d.innerHTML=list.innerHTML;
+    updateStorageHint();
+    return;
+  }
+  list.innerHTML = `<div style="padding:6px 0">${filtered.map(chatRowHtml).join('')}</div>`;
+  const d=document.getElementById('desktop-chat-list'); if(d) d.innerHTML=list.innerHTML;
+}
+function chatRowHtml(c){
+  const isUnread = c.unread>0;
+  const letter = c.name.trim()[0]?.toUpperCase() || 'Ч';
+  return `<div class="chat-row ${isUnread?'unread':''}" onclick="openChat(${c.id})">
+    <div class="avatar" style="${c.color?`background:${c.color};color:#fff`:''}">${c.avatar?`<img src="${c.avatar}">`:letter}${c.online?'<span class="dot"></span>':''}</div>
+    <div class="chat-main"><div class="chat-name">${c.pinned?'📌 ':''}${escapeHtml(c.name)} ${c.muted?'· 🔕':''}</div><div class="chat-last">${c.typing?'<span style="color:var(--primary)">печатает…</span>':escapeHtml(c.last||'')}</div></div>
+    <div class="chat-meta"><span class="chat-time">${escapeHtml(c.time||'')}</span>${isUnread?`<span class="badge">${c.unread}</span>`:''}</div>
+  </div>`;
+}
+function filterChats(q){ renderChats(q); }
+function toggleSearch(){ const el=document.getElementById('home-search'); el.style.display = el.style.display==='none' ? 'block' : 'none'; if(el.style.display!=='none') document.getElementById('search-input')?.focus(); }
+function setFilter(btn){ document.querySelectorAll('.fchip').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+
+function openChat(id){
+  currentChatId=id;
+  const c=chats.find(x=>x.id===id);
+  if(c){
+    document.getElementById('chat-name').textContent=c.name;
+    document.getElementById('chat-status').textContent=c.online?'в сети':'был(а) в '+ (c.time||'сети');
+    document.getElementById('chat-status').style.color=c.online?'var(--success)':'var(--text2)';
+    const av=document.getElementById('chat-avatar'); const img=document.getElementById('chat-avatar-img');
+    if(c.avatar){ img.src=c.avatar; img.style.display='block'; av.style.display='none'; } else { av.textContent=(c.name[0]||'Ч').toUpperCase(); if(c.color) av.style.background=c.color; av.style.display='flex'; img.style.display='none'; }
+    if(c.unread) { c.unread=0; save(); renderChats(document.getElementById('search-input')?.value||''); }
+  }
+  go('chat');
+}
+
+function renderMessages(){
+  const area=document.getElementById('messages-area');
+  if(!currentChatId){ area.innerHTML=`<div class="empty"><div class="empty-ill" style="width:120px;height:90px"><svg width="120" height="90" viewBox="0 0 120 90" fill="none"><rect x="8" y="12" width="80" height="50" rx="12" fill="#f2f2f7" stroke="#e5e5ea"/><rect x="18" y="26" width="50" height="7" rx="3" fill="#6C5CE7"/><rect x="18" y="38" width="60" height="6" rx="3" fill="#e7e7ea"/></svg></div><h3>Выбери чат</h3><p>Открой диалог из списка или начни новый</p></div>`; return; }
+  const msgs=messagesData[currentChatId] || [];
+  if(msgs.length===0){
+    const c=chats.find(x=>x.id===currentChatId);
+    area.innerHTML = `
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:24px">${c && c.name ? c.name[0].toUpperCase() : '💬'}</div>
+        <div style="font-weight:750;margin-top:12px">${escapeHtml(c?c.name:'Чат')}</div>
+        <div style="font-size:13px;color:var(--text2);margin-top:4px;max-width:280px">Это начало истории. Напиши первое сообщение — оно появится здесь.</div>
+        <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+          <button onclick="quickSend('Привет! 👋')" style="padding:8px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface);font-size:13px">Привет! 👋</button>
+          <button onclick="quickSend('Как дела?')" style="padding:8px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface);font-size:13px">Как дела?</button>
+          <button onclick="quickSend('Где встречаемся?')" style="padding:8px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface);font-size:13px">Где встречаемся?</button>
+        </div>
+        <div style="margin-top:16px;font-size:11px;color:var(--text3)">Защищено сквозным шифрованием • Сообщения хранятся на устройстве</div>
+      </div>`;
+    return;
+  }
+  let html=`<div class="day">сегодня</div>`;
+  msgs.forEach(m=>{
+    const isMe=m.from==='me';
+    let content='';
+    if(m.type==='image') content=`<div class="bubble-img"><img src="${m.img}"></div>${m.text?`<div>${escapeHtml(m.text)}</div>`:''}`;
+    else if(m.type==='voice'){ const bars=(m.wave||[5,8,6,10,7,9,6,11]).map(h=>`<i style="height:${h*1.8}px"></i>`).join(''); content=`<div class="voice"><div class="voice-btn">▶</div><div class="wave">${bars}</div><span style="font-size:11px;opacity:.8">${m.duration||'0:12'}</span></div>` }
+    else if(m.type==='file') content=`<div style="display:flex;gap:10px;align-items:center"><div style="width:36px;height:36px;background:rgba(255,255,255,.2);border-radius:8px;display:flex;align-items:center;justify-content:center">≡</div><div><div style="font-weight:600;font-size:13px">${escapeHtml(m.fileName||'Файл')}</div><div style="font-size:11px;opacity:.8">${escapeHtml(m.fileSize||'')}</div></div></div>`;
+    else content = formatMsg(m.text||'');
+    const reply = m.replyTo ? `<div style="font-size:12px;opacity:.8;border-left:2px solid currentColor;padding-left:8px;margin-bottom:6px">${escapeHtml(m.replyToText||'Ответ')}</div>` : '';
+    const reacts = m.reactions ? `<div style="display:flex;gap:4px;margin-top:6px">${m.reactions.map(r=>`<span style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:2px 6px;font-size:11px">${r.emoji} ${r.count}</span>`).join('')}</div>` : '';
+    html+=`<div class="bubble ${isMe?'out':'in'}" onclick="showMsgActions(${m.id})">${reply}<div>${content}</div>${reacts}<div class="bubble-time">${escapeHtml(m.time||'')} ${isMe?(m.status==='read'?'✓✓':m.status==='delivered'?'✓✓':'✓'):''}</div></div>`;
+  });
+  area.innerHTML=html;
+  area.scrollTop=area.scrollHeight;
+}
+function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function formatMsg(t){ return escapeHtml(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/https?:\/\/\S+/g, s=>`<a href="${s}" target="_blank" style="color:inherit;text-decoration:underline">${s}</a>`); }
+function quickSend(t){ document.getElementById('msg-input').value=t; sendMessage(); }
+
+function sendMessage(){
+  const input=document.getElementById('msg-input');
+  const text=input.value.trim();
+  if(!text || !currentChatId) return;
+  if(!messagesData[currentChatId]) messagesData[currentChatId]=[];
+  const now=new Date(); const time=now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+  messagesData[currentChatId].push({id:++msgCounter, from:'me', text, time, status:'sent', replyTo: replyingTo, replyToText: replyingTo ? (messagesData[currentChatId].find(m=>m.id===replyingTo)?.text||'Сообщение').slice(0,32) : null});
+  const c=chats.find(x=>x.id===currentChatId); if(c){ c.last='Вы: '+text; c.time='сейчас'; save(); }
+  input.value=''; replyingTo=null; document.getElementById('reply-preview').style.display='none'; updateSendBtn(); save(); renderMessages(); renderChats();
+}
+function msgKey(e){ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); } }
+function onTyping(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,110)+'px'; updateSendBtn(); }
+function updateSendBtn(){ const v=document.getElementById('msg-input').value.trim(); document.getElementById('send-btn').style.display=v?'flex':'none'; document.getElementById('voice-btn').style.display=v?'none':'flex'; }
+function insertEmoji(e){ const el=document.getElementById('msg-input'); el.value+=e; el.focus(); updateSendBtn(); onTyping(el); }
+function toggleEmoji(){ const p=document.getElementById('emoji-picker'); p.style.display = p.style.display==='none'?'block':'none'; document.getElementById('attach-menu').style.display='none'; }
+function toggleAttach(){ const m=document.getElementById('attach-menu'); m.style.display=m.style.display==='none'?'grid':'none'; document.getElementById('emoji-picker').style.display='none'; }
+function doAttach(type){
+  hideOverlays(); document.getElementById('attach-menu').style.display='none';
+  if(!currentChatId){ toast('Сначала создай чат'); return; }
+  if(!messagesData[currentChatId]) messagesData[currentChatId]=[];
+  const time=new Date().getHours()+':'+String(new Date().getMinutes()).padStart(2,'0');
+  if(type==='gallery'){ messagesData[currentChatId].push({id:++msgCounter,from:'me',type:'image',img:'https://picsum.photos/seed/'+Date.now()+'/420/320',text:'',time,status:'sent'}); }
+  else if(type==='file'){ messagesData[currentChatId].push({id:++msgCounter,from:'me',type:'file',fileName:'Документ.pdf',fileSize:'1.8 МБ',time,status:'sent'}); }
+  else if(type==='location'){ messagesData[currentChatId].push({id:++msgCounter,from:'me',text:'📍 Нижний Новгород, ул. Большая Покровка, 43',time,status:'sent'}); }
+  else if(type==='camera'){ messagesData[currentChatId].push({id:++msgCounter,from:'me',type:'image',img:'https://picsum.photos/seed/'+Date.now()+'/420/320',time,status:'sent'}); }
+  else { toast('Скоро: '+type); return; }
+  save(); renderMessages(); const c=chats.find(x=>x.id===currentChatId); if(c){ c.last='Вы: вложение'; c.time='сейчас'; save(); renderChats(); }
+}
+function cancelReply(){ replyingTo=null; document.getElementById('reply-preview').style.display='none'; }
+function doReply(){ hideOverlays(); if(!selectedMsgId) return; const msgs=messagesData[currentChatId]||[]; const m=msgs.find(x=>x.id===selectedMsgId); if(m){ replyingTo=selectedMsgId; document.getElementById('reply-name').textContent=m.from==='me'?'Вы':document.getElementById('chat-name').textContent; document.getElementById('reply-text').textContent=(m.text||'Вложение').slice(0,36); document.getElementById('reply-preview').style.display='block'; document.getElementById('msg-input').focus(); } }
+function showMsgActions(id){ selectedMsgId=id; showSheet('msg-actions'); }
+function react(emoji){ hideOverlays(); const msgs=messagesData[currentChatId]||[]; const m=msgs.find(x=>x.id===selectedMsgId); if(m){ if(!m.reactions) m.reactions=[]; const ex=m.reactions.find(r=>r.emoji===emoji); if(ex) ex.count++; else m.reactions.push({emoji,count:1}); save(); renderMessages(); } }
+function copyMsg(){ hideOverlays(); const m=(messagesData[currentChatId]||[]).find(x=>x.id===selectedMsgId); if(m && m.text){ navigator.clipboard.writeText(m.text).catch(()=>{}); toast('Скопировано'); } }
+function editMsg(){ hideOverlays(); const m=(messagesData[currentChatId]||[]).find(x=>x.id===selectedMsgId); if(m && m.from==='me' && m.text){ document.getElementById('msg-input').value=m.text; updateSendBtn(); onTyping(document.getElementById('msg-input')); messagesData[currentChatId]=messagesData[currentChatId].filter(x=>x.id!==selectedMsgId); save(); } else toast('Только свои сообщеньица можно править'); }
+function deleteMsg(){ hideOverlays(); if(!currentChatId) return; messagesData[currentChatId]=(messagesData[currentChatId]||[]).filter(m=>m.id!==selectedMsgId); save(); renderMessages(); toast('Удалили'); }
+function clearChat(){ hideOverlays(); if(!currentChatId) return; messagesData[currentChatId]=[]; save(); renderMessages(); const c=chats.find(x=>x.id===currentChatId); if(c){ c.last=''; save(); renderChats(); } toast('Чат очищен'); }
+function deleteChat(){ hideOverlays(); if(!currentChatId) return; chats=chats.filter(c=>c.id!==currentChatId); delete messagesData[currentChatId]; currentChatId=null; save(); renderChats(); go('home'); toast('Чат удалён'); }
+function startVoice(){ toast('Удерживай для записи'); document.getElementById('voice-btn').style.background='var(--error)'; document.getElementById('voice-btn').style.color='#fff'; }
+function stopVoice(){ const b=document.getElementById('voice-btn'); b.style.background='var(--surface)'; b.style.color=''; if(!currentChatId){ toast('Создай чат сначала'); return; } if(!messagesData[currentChatId]) messagesData[currentChatId]=[]; const t=new Date().getHours()+':'+String(new Date().getMinutes()).padStart(2,'0'); messagesData[currentChatId].push({id:++msgCounter,from:'me',type:'voice',duration:'0:08',time:t,status:'sent',wave:[4,7,9,6,8,5,7,10]}); save(); renderMessages(); }
+
+// calls empty
+function renderCalls(){
+  const el=document.getElementById('calls-list');
+  if(calls.length===0){
+    el.innerHTML=`<div class="empty"><div class="empty-ill"><svg width="150" height="110" viewBox="0 0 150 110" fill="none"><circle cx="75" cy="42" r="26" fill="#f2f2f7" stroke="#e7e7ea"/><text x="75" y="50" text-anchor="middle" font-size="18">☎</text><rect x="22" y="78" width="106" height="10" rx="5" fill="#f2f2f7" stroke="#e7e7ea"/><rect x="38" y="94" width="74" height="6" rx="3" fill="#e7e7ea"/></svg></div><h3>Звонков пока нет</h3><p>История появится здесь. Позвони контакту — всё зашифровано.</p><button class="btn btn-primary" onclick="showSheet('new-call-sheet')" style="max-width:220px">Позвонить</button></div>`;
+  } else {
+    el.innerHTML = calls.map(c=>`<div class="chat-row" onclick="startCall('${c.type||'voice'}')"><div class="avatar" style="width:44px;height:44px">${c.name[0]}</div><div class="chat-main"><div class="chat-name">${escapeHtml(c.name)}</div><div class="chat-last">${c.dir==='missed'?'Пропущенный':'Исходящий'} • ${escapeHtml(c.time)}</div></div><span class="icon-btn" style="background:var(--primary);color:#fff">☎</span></div>`).join('');
+  }
+  renderCallPick();
+}
+function renderCallPick(){
+  const el=document.getElementById('call-pick-list');
+  if(!el) return;
+  if(contacts.length===0) el.innerHTML=`<div style="padding:16px;text-align:center;color:var(--text2);font-size:13px">Нет контактов — добавь сначала</div>`;
+  else el.innerHTML=contacts.map(c=>`<div class="list-item" onclick="hideOverlays();startCall('voice','${escapeHtml(c.name)}')"><div class="avatar" style="width:38px;height:38px">${escapeHtml(c.name[0])}</div><div style="flex:1"><div style="font-weight:600">${escapeHtml(c.name)}</div><div style="font-size:12px;color:var(--text2)">@${escapeHtml(c.username)}</div></div><span style="color:var(--text3)">›</span></div>`).join('');
+}
+function startCall(type,name){
+  const n=name||document.getElementById('chat-name')?.textContent||'Контакт';
+  if(contacts.length===0 && !name){ toast('Добавь контакт, чтобы позвонить'); return; }
+  const ov=document.createElement('div'); ov.className='call-screen';
+  ov.innerHTML=`<div class="call-av">${type==='video'?'◎':'☎'}</div><div style="margin-top:16px;font-weight:800;font-size:18px">${escapeHtml(n)}</div><div style="font-size:13px;opacity:.8;margin-top:4px" id="call-status">${type==='video'?'Видео':'Голосовой'} • вызов…</div><div style="font-size:11px;opacity:.5;margin-top:4px">WebRTC • зашифровано</div><div style="display:flex;gap:12px;margin-top:22px"><button class="icon-btn" style="width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.14);color:#fff" onclick="toast('Микрофон')">◐</button><button class="icon-btn" style="width:56px;height:56px;border-radius:50%;background:var(--error);color:#fff" onclick="this.closest('.call-screen').remove();toast('Завершили')">✕</button><button class="icon-btn" style="width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.14);color:#fff" onclick="toast('Динамик')">◑</button></div>`;
+  document.body.appendChild(ov);
+  setTimeout(()=>{ const s=ov.querySelector('#call-status'); if(s) s.textContent='Разговор 00:03'; },1500);
+  let sec=3; const iv=setInterval(()=>{ sec++; const s=ov.querySelector('#call-status'); if(!s || !document.body.contains(ov)) return clearInterval(iv); s.textContent='Разговор '+String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0'); },1000);
+  // save to history
+  calls.unshift({name:n,type,dir:'out',time:'сейчас'}); if(calls.length>20) calls.pop(); save();
+}
+
+// contacts
+function renderContacts(){
+  const el=document.getElementById('contacts-list');
+  if(contacts.length===0){
+    el.innerHTML=`<div class="empty"><div class="empty-ill"><svg width="150" height="110" viewBox="0 0 150 110" fill="none"><circle cx="75" cy="38" r="22" fill="#f5f5f7" stroke="#e7e7ea"/><rect x="48" y="64" width="54" height="8" rx="4" fill="#e7e7ea"/><rect x="58" y="76" width="34" height="6" rx="3" fill="#e7e7ea"/><circle cx="112" cy="86" r="14" fill="var(--primary)" opacity="0.1"/><text x="112" y="91" text-anchor="middle" font-size="14">＋</text></svg></div><h3>Контактов нет</h3><p>Добавь людей по @нику. Они появятся здесь, а чаты — во вкладке Чаты.</p><button class="btn btn-primary" onclick="showSheet('add-contact-sheet')" style="max-width:220px">Добавить контакт</button><div style="margin-top:12px"><button class="btn btn-secondary" style="max-width:220px" onclick="toast('Доступ к телефонной книге — скоро')">Импорт из телефона</button></div></div>`;
+    renderCallPick(); return;
+  }
+  const groups={}; contacts.forEach(c=>{ const l=(c.name[0]||'#').toUpperCase(); (groups[l]=groups[l]||[]).push(c); });
+  let html=''; Object.keys(groups).sort().forEach(letter=>{ html+=`<div style="padding:8px 14px;font-size:11px;font-weight:700;color:var(--text3);background:var(--surface)">${letter}</div>`; groups[letter].forEach(c=>{ html+=`<div class="chat-row" onclick="startChatWith('${c.username}')"><div class="avatar" style="width:42px;height:42px">${escapeHtml(c.name[0]||'?')}</div><div class="chat-main"><div class="chat-name">${escapeHtml(c.name)}</div><div class="chat-last">@${escapeHtml(c.username)}</div></div><button class="icon-btn" onclick="event.stopPropagation();startChatWith('${c.username}')" style="background:var(--surface);border:1px solid var(--border)">✎</button></div>`; }); });
+  el.innerHTML=html;
+  renderCallPick();
+}
+function renderPickList(filter=''){
+  const el=document.getElementById('pick-list');
+  if(!el) return;
+  if(contacts.length===0){ el.innerHTML=`<div style="padding:20px;text-align:center"><div style="font-weight:600">Нет контактов</div><div class="hint">Добавь контакт по @нику</div><button class="btn btn-secondary" style="margin-top:10px" onclick="showSheet('add-contact-sheet')">Добавить</button></div>`; return; }
+  const f=filter.toLowerCase();
+  const filtered=contacts.filter(c=>!f || c.name.toLowerCase().includes(f) || c.username.toLowerCase().includes(f));
+  if(filtered.length===0){ el.innerHTML=`<div style="padding:16px;text-align:center;color:var(--text2)">Ничего не нашли</div>`; return; }
+  el.innerHTML=filtered.map(c=>`<div class="list-item" onclick="startChatWith('${c.username}')"><div class="avatar" style="width:38px;height:38px">${escapeHtml(c.name[0])}</div><div style="flex:1"><div style="font-weight:600">${escapeHtml(c.name)}</div><div style="font-size:12px;color:var(--text2)">@${escapeHtml(c.username)}</div></div></div>`).join('');
+}
+function filterContacts(q){ if(contacts.length===0) return; if(!q){ renderContacts(); return; } const f=contacts.filter(c=>c.name.toLowerCase().includes(q.toLowerCase())||c.username.toLowerCase().includes(q.toLowerCase())); if(f.length===0) document.getElementById('contacts-list').innerHTML=`<div class="empty"><h3>Ничего не нашли</h3><p>Попробуй другой запрос</p></div>`; else { const tmp=contacts; contacts=f; renderContacts(); contacts=tmp; } }
+function filterPick(q){ renderPickList(q); }
+function startChatWith(username){
+  hideOverlays();
+  const c=contacts.find(x=>x.username===username);
+  if(!c) return;
+  let chat=chats.find(x=>x.username===username);
+  if(!chat){
+    chat={id: Date.now(), name:c.name, username:c.username, last:'', time:'', unread:0, color: `hsl(${Math.random()*40+250},70%,65%)`, type:'private'};
+    chats.unshift(chat); save();
+  }
+  openChat(chat.id);
+}
+function addContact(){
+  const name=document.getElementById('new-contact-name').value.trim();
+  const username=document.getElementById('new-contact-username').value.trim().replace(/^@/,'');
+  if(!name || !username) return toast('Заполни имя и @ник');
+  if(username.length<3 || !/^[a-z0-9_]+$/.test(username)) return toast('Ник: a-z, 0-9, _, от 3 символов');
+  if(contacts.some(c=>c.username===username)) return toast('Такой @ник уже есть');
+  contacts.push({name, username}); save(); hideOverlays(); renderContacts(); renderPickList(); toast('Добавили @'+username);
+  document.getElementById('new-contact-name').value=''; document.getElementById('new-contact-username').value='';
+}
+function updateStorageHint(){ const el=document.getElementById('storage-hint'); if(!el) return; const total=chats.length + contacts.length + Object.keys(messagesData).reduce((a,k)=>a+(messagesData[k]?.length||0),0); el.textContent = total===0 ? 'Пусто • кэш 0 МБ' : `${chats.length} чатов, ${contacts.length} контактов • ${total} сообщ.`; }
+
+// groups/channels creation -> empty chats
+function createGroup(){
+  const name=document.getElementById('group-name').value.trim();
+  if(!name) return toast('Введи название группы');
+  const chat={id:Date.now(), name, last:'Группа создана', time:'сейчас', unread:0, color:'#0a8a6a', type:'group'};
+  chats.unshift(chat); messagesData[chat.id]=[]; save(); hideOverlays(); openChat(chat.id); toast('Группа «'+name+'» создана');
+}
+function createChannel(){
+  const name=document.getElementById('channel-name').value.trim();
+  if(!name) return toast('Введи название канала');
+  const chat={id:Date.now(), name, last:'Канал создан', time:'сейчас', unread:0, color:'#ea580c', type:'channel'};
+  chats.unshift(chat); messagesData[chat.id]=[]; save(); hideOverlays(); openChat(chat.id); toast('Канал «'+name+'» создан');
+}
+
+// auth
+function formatPhone(el){ let v=el.value.replace(/\D/g,''); if(v.length>10) v=v.slice(0,10); let f=''; if(v.length>0) f+='('+v.slice(0,3); if(v.length>=4) f+=') '+v.slice(3,6); if(v.length>=7) f+='-'+v.slice(6,8); if(v.length>=9) f+='-'+v.slice(8,10); el.value=f; }
+function pickCountry(flag,name,code){ document.getElementById('c-flag').textContent=flag; document.getElementById('c-name').textContent=name; document.getElementById('c-code').textContent=code; document.getElementById('phone-prefix').textContent=code; document.getElementById('country-list').style.display='none'; }
+function toggleCountry(){ const el=document.getElementById('country-list'); el.style.display=el.style.display==='none'?'block':'none'; }
+function sendCode(){ const ph=document.getElementById('phone-input').value.replace(/\D/g,''); if(ph.length<10) return toast('Введи номер полностью'); document.getElementById('verify-phone-display').textContent='отправили на '+document.getElementById('c-code').textContent+' ('+document.getElementById('phone-input').value+')'; go('phone-verify'); startTimer(); }
+let timerInt; function startTimer(){ let s=59; const el=document.getElementById('otp-timer'), b=document.getElementById('resend-btn'); el.style.display='block'; b.style.display='none'; clearInterval(timerInt); timerInt=setInterval(()=>{ s--; if(el) el.textContent='Повтор через 0:'+String(s).padStart(2,'0'); if(s<=0){ clearInterval(timerInt); el.style.display='none'; b.style.display='block'; } },1000); }
+function resend(){ toast('Отправили ещё раз'); startTimer(); }
+function otpIn(el,idx){ if(el.value){ el.classList.add('filled'); const n=document.querySelectorAll('.otp')[idx+1]; if(n) n.focus(); } else el.classList.remove('filled'); const code=[...document.querySelectorAll('.otp')].map(i=>i.value).join(''); if(code.length===6) setTimeout(verifyCode,120); }
+function otpBack(e,idx){ if(e.key==='Backspace' && !e.target.value){ const p=document.querySelectorAll('.otp')[idx-1]; if(p) p.focus(); } }
+function verifyCode(){ const code=[...document.querySelectorAll('.otp')].map(i=>i.value).join(''); if(code==='123456' || code.length===6){ toast('Код верный'); setTimeout(()=>go('profile-setup'),300); } else { document.querySelectorAll('.otp').forEach(i=>{ i.style.borderColor='var(--error)'; setTimeout(()=>i.style.borderColor='',600); }); toast('Неверный код — попробуй 123456'); } }
+function validateEmail(el){ const h=document.getElementById('email-hint'); if(!el.value) h.textContent=''; else if(!el.value.includes('@')||!el.value.includes('.')){ h.textContent='Похоже, опечатка в почте'; h.className='hint error'; } else { h.textContent='Ок'; h.className='hint ok'; } }
+function checkStrength(val,barId='pass-bar',hintId='pass-hint'){ let s=0; if(val.length>=8)s++; if(/[A-Z]/.test(val))s++; if(/[0-9]/.test(val))s++; if(/[^A-Za-z0-9]/.test(val))s++; const bar=document.getElementById(barId), hint=document.getElementById(hintId); if(!bar) return; const w=[0,25,50,75,100][s]; bar.style.width=w+'%'; bar.style.background=s<2?'var(--error)':s<3?'#f59e0b':'var(--success)'; if(hint) hint.textContent=s<2?'Слабоват':s<3?'Норм':s>=3?'Сильный ✓':''; }
+function checkMatch(){ const a=document.getElementById('email-pass').value, b=document.getElementById('email-pass2').value, h=document.getElementById('pass2-hint'); if(!b) h.textContent=''; else if(a!==b){ h.textContent='Не совпадает'; h.className='hint error'; } else { h.textContent='Совпадает'; h.className='hint ok'; } }
+function togglePass(id,btn){ const el=document.getElementById(id); el.type=el.type==='password'?'text':'password'; btn.textContent=el.type==='password'?'показать':'скрыть'; }
+function checkUsername(val,hid='anon-login-hint'){ const h=document.getElementById(hid); if(!val){ h.textContent='a-z, 0-9, _, 5–32'; h.className='hint'; return; } if(val.length<5){ h.textContent='Коротковато'; h.className='hint error'; } else if(['admin','ikchat','test','root'].includes(val.toLowerCase())){ h.textContent='Занят'; h.className='hint error'; } else if(!/^[a-z0-9_]+$/.test(val)){ h.textContent='Только a-z, 0-9, _'; h.className='hint error'; } else { h.textContent='Свободен'; h.className='hint ok'; } }
+function updateUsername(){ const name=document.getElementById('setup-name').value.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,''); if(name) document.getElementById('setup-username').value=name+'_'+Math.floor(Math.random()*90+10); }
+function detectLogin(v){ const h=document.getElementById('login-hint'); if(!v) h.textContent=''; else if(v.includes('@')) h.textContent='Почта'; else if(/^\+?\d/.test(v)) h.textContent='Телефон'; else h.textContent='Юзернейм'; }
+function registerEmail(){ const e=document.getElementById('email-input').value; if(!e.includes('@')) return toast('Введи почту'); document.getElementById('verify-email-display').textContent='письмо на '+e; go('email-verify'); }
+function registerAnon(){ if(!document.getElementById('anon-check').checked) return toast('Отметь галочку'); if(document.getElementById('anon-login').value.length<5) return toast('Логин от 5 символов'); go('profile-setup'); }
+function doLogin(){ const id=document.getElementById('login-id').value, p=document.getElementById('login-pass').value; if(!id||!p) return toast('Заполни поля'); toast('Вход выполнен'); setTimeout(goHome,400); }
+function goHome(){
+  myName=document.getElementById('setup-name').value.trim() || myName || 'Пользователь';
+  myUsername=document.getElementById('setup-username').value.trim().replace(/^@/,'') || myUsername || ('user_'+Math.floor(Math.random()*9000));
+  save();
+  document.getElementById('settings-name').textContent=myName;
+  document.getElementById('settings-sub').textContent='@'+myUsername+' • в сети';
+  const av=document.getElementById('settings-av'); if(av) av.textContent=myName.split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('menu-name').textContent=myName; document.getElementById('menu-sub').textContent='@'+myUsername;
+  const menuAv=document.getElementById('menu-av'); if(menuAv) menuAv.textContent=myName.split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase();
+  go('home');
+  setTimeout(()=>toast('Привет, '+(myName.split(' ')[0]||'друг')+'! Это чистый IKChat — начни с нового чата.'),500);
+}
+function randomAvatar(){ const colors=['#6C5CE7','#0a8a6a','#2563eb','#ea580c','#db2777','#0891b2','#7c3aed']; const c=colors[Math.floor(Math.random()*colors.length)]; document.getElementById('setup-avatar').style.background=c; }
+
+function setTheme(t){ if(t==='dark') document.documentElement.setAttribute('data-theme','dark'); else document.documentElement.removeAttribute('data-theme'); localStorage.setItem('ikchat_theme',t); toast(t==='dark'?'Тёмная тема':'Светлая тема'); }
+function setAccent(col){ document.documentElement.style.setProperty('--primary',col); toast('Цвет обновили'); }
+(function(){ const s=localStorage.getItem('ikchat_theme'); if(s==='dark') document.documentElement.setAttribute('data-theme','dark'); })();
+
+function switchTab(tab,btn){ document.querySelectorAll('.tabs .tab').forEach(b=>b.classList.remove('active')); if(btn) btn.classList.add('active'); if(tab==='chats') go('home'); if(tab==='contacts') go('contacts'); if(tab==='calls') go('calls'); }
+function showSheet(id){ document.getElementById('overlay').classList.add('show'); document.querySelectorAll('.sheet').forEach(s=>s.style.display='none'); const el=document.getElementById(id); if(el) el.style.display='block'; if(id==='pick-contact-sheet') renderPickList(''); }
+function hideOverlays(){ document.getElementById('overlay').classList.remove('show'); const am=document.getElementById('attach-menu'); if(am) am.style.display='none'; const ep=document.getElementById('emoji-picker'); if(ep) ep.style.display='none'; }
+let toastTimer; function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2000); }
+
+updateStorageHint(); renderChats(); renderContacts(); renderCalls();
+</script>
+</body>
+</html>
